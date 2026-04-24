@@ -25,7 +25,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          allowed_tools: Bash,Read,Grep,Glob
+          claude_args: --allowedTools "Bash,Read,Grep,Glob"
           prompt: |
             Analyze GitHub issue #${{ inputs.issue_number }} in repository `${{ github.repository }}`
             against this codebase to identify questions that need answering
