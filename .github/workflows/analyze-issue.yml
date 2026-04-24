@@ -20,6 +20,16 @@ jobs:
       - name: Checkout target repository
         uses: actions/checkout@v6
 
+      - name: Debug — is ANTHROPIC_API_KEY present?
+        env:
+          KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "$KEY" ]; then
+            echo "ANTHROPIC_API_KEY is EMPTY in called-workflow context"
+          else
+            echo "ANTHROPIC_API_KEY is set (length=${#KEY})"
+          fi
+
       - name: Analyze issue with Claude Code
         uses: anthropics/claude-code-action@e58dfa55559035499a4982426bb73605e8b5ad8e # v1.0.105
         env:
