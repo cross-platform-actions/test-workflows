@@ -7,29 +7,7 @@ on:
         description: The issue number to analyze.
         required: true
         type: string
-      repository:
-        description: |
-          The target repository in `owner/repo` form. Defaults to the caller
-          repository.
-        required: false
-        type: string
-        default: ${{ github.repository }}
-      ref:
-        description: |
-          The git ref to check out from the target repository. Defaults to the
-          repository's default branch.
-        required: false
-        type: string
-        default: ''
-      claude_code_action_version:
-        description: The version of `anthropics/claude-code-action` to pin to.
-        required: false
-        type: string
-        default: v1
     secrets:
-      anthropic_api_key:
-        description: Anthropic API key used by Claude Code.
-        required: true
       github_token:
         description: |
           A GitHub token with `contents:read` and `issues:write` on the target
@@ -38,7 +16,8 @@ on:
         required: false
 
 jobs:
-  analyze:
+  analyze-issue:
+    if: contains(github.event.comment.body, 'claude issue analyze')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -47,24 +26,22 @@ jobs:
       - name: Checkout target repository
         uses: actions/checkout@v6
         with:
-          repository: ${{ inputs.repository }}
-          ref: ${{ inputs.ref }}
           token: ${{ secrets.github_token || github.token }}
 
       - name: Analyze issue with Claude Code
-        uses: anthropics/claude-code-action@${{ inputs.claude_code_action_version }}
+        uses: anthropics/claude-code-action@e58dfa55559035499a4982426bb73605e8b5ad8e # v1.0.105
         env:
           GH_TOKEN: ${{ secrets.github_token || github.token }}
         with:
-          anthropic_api_key: ${{ secrets.anthropic_api_key }}
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           allowed_tools: Bash,Read,Grep,Glob
           prompt: |
-            Analyze GitHub issue #${{ inputs.issue_number }} in repository `${{ inputs.repository }}`
+            Analyze GitHub issue #${{ inputs.issue_number }} in repository `${{ github.repository }}`
             against this codebase to identify questions that need answering
             before an AI agent can implement it. Then post the result as a
             comment on the issue.
 
-            The current working directory is a checkout of `${{ inputs.repository }}`.
+            The current working directory is a checkout of `${{ github.repository }}`.
             The `gh` CLI is authenticated via the `GH_TOKEN` environment variable.
 
             ## Step 1: Fetch the issue
@@ -74,7 +51,7 @@ jobs:
 
             ```
             gh issue view ${{ inputs.issue_number }} \
-              --repo ${{ inputs.repository }} \
+              --repo ${{ github.repository }} \
               --json title,body,number,state,labels,assignees,milestone,url,comments
             ```
 
@@ -120,7 +97,7 @@ jobs:
             In both cases, post the comment using:
 
             ```
-            gh issue comment ${{ inputs.issue_number }} --repo ${{ inputs.repository }} --body "COMMENT_BODY"
+            gh issue comment ${{ inputs.issue_number }} --repo ${{ github.repository }} --body "COMMENT_BODY"
             ```
 
             Format the comment clearly. Start it with a note that it was
