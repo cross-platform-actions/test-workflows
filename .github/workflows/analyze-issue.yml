@@ -8,12 +8,16 @@ on:
         required: true
         type: string
       repository:
-        description: The target repository in `owner/repo` form. Defaults to the caller repository.
+        description: |
+          The target repository in `owner/repo` form. Defaults to the caller
+          repository.
         required: false
         type: string
         default: ${{ github.repository }}
       ref:
-        description: The git ref to check out from the target repository. Defaults to the repository's default branch.
+        description: |
+          The git ref to check out from the target repository. Defaults to the
+          repository's default branch.
         required: false
         type: string
         default: ''
@@ -27,7 +31,10 @@ on:
         description: Anthropic API key used by Claude Code.
         required: true
       github_token:
-        description: A GitHub token with `contents:read` and `issues:write` on the target repository. Falls back to the job's `GITHUB_TOKEN`, which only works when the target repository is the caller repository.
+        description: |
+          A GitHub token with `contents:read` and `issues:write` on the target
+          repository. Falls back to the job's `GITHUB_TOKEN`, which only works
+          when the target repository is the caller repository.
         required: false
 
 jobs:
@@ -38,7 +45,7 @@ jobs:
       issues: write
     steps:
       - name: Checkout target repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: ${{ inputs.repository }}
           ref: ${{ inputs.ref }}
@@ -52,21 +59,29 @@ jobs:
           anthropic_api_key: ${{ secrets.anthropic_api_key }}
           allowed_tools: Bash,Read,Grep,Glob
           prompt: |
-            Analyze GitHub issue #${{ inputs.issue_number }} in repository `${{ inputs.repository }}` against this codebase to identify questions that need answering before an AI agent can implement it. Then post the result as a comment on the issue.
+            Analyze GitHub issue #${{ inputs.issue_number }} in repository `${{ inputs.repository }}`
+            against this codebase to identify questions that need answering
+            before an AI agent can implement it. Then post the result as a
+            comment on the issue.
 
-            The current working directory is a checkout of `${{ inputs.repository }}`. The `gh` CLI is authenticated via the `GH_TOKEN` environment variable.
+            The current working directory is a checkout of `${{ inputs.repository }}`.
+            The `gh` CLI is authenticated via the `GH_TOKEN` environment variable.
 
             ## Step 1: Fetch the issue
 
-            Fetch the issue and its existing comments so you have full context and avoid repeating questions that have already been answered:
+            Fetch the issue and its existing comments so you have full context
+            and avoid repeating questions that have already been answered:
 
             ```
-            gh issue view ${{ inputs.issue_number }} --repo ${{ inputs.repository }} --json title,body,number,state,labels,assignees,milestone,url,comments
+            gh issue view ${{ inputs.issue_number }} \
+              --repo ${{ inputs.repository }} \
+              --json title,body,number,state,labels,assignees,milestone,url,comments
             ```
 
             ## Step 2: Analyze the codebase
 
-            Thoroughly explore the codebase to understand how the requested change would fit in. Consider:
+            Thoroughly explore the codebase to understand how the requested
+            change would fit in. Consider:
 
             - **Architecture**: Which parts of the codebase are relevant? What patterns and conventions are used?
             - **Scope**: What files, modules, or components would need to change?
@@ -77,7 +92,9 @@ jobs:
 
             ## Step 3: Formulate questions
 
-            Based on the analysis, compile a list of specific, actionable questions that need to be answered before implementation can start. Focus on:
+            Based on the analysis, compile a list of specific, actionable
+            questions that need to be answered before implementation can start.
+            Focus on:
 
             - Ambiguities in the requirements
             - Design decisions that aren't specified
@@ -85,13 +102,19 @@ jobs:
             - Acceptance criteria that are missing or unclear
             - Anything where the codebase suggests multiple valid approaches
 
-            Do NOT include questions that can be answered by reading the codebase. Only ask about things that require human input or product decisions.
+            Do NOT include questions that can be answered by reading the
+            codebase. Only ask about things that require human input or product
+            decisions.
 
             ## Step 4: Decide readiness and post a comment
 
             Decide whether the issue is ready for an AI agent to implement:
 
-            - **Ready**: The requirements are clear and no questions remain. Post a comment stating that the issue is ready for an AI agent to implement, with a brief summary of the understood scope and affected areas.
+            - **Ready**: The requirements are clear and no questions remain.
+                Post a comment stating that the issue is ready for an AI agent to
+                implement, with a brief summary of the understood scope and
+                affected areas.
+
             - **Not ready**: One or more questions remain. Post a comment containing the questions.
 
             In both cases, post the comment using:
@@ -100,6 +123,10 @@ jobs:
             gh issue comment ${{ inputs.issue_number }} --repo ${{ inputs.repository }} --body "COMMENT_BODY"
             ```
 
-            Format the comment clearly. Start it with a note that it was generated by an AI analysis of the codebase. If posting questions, use a heading and a numbered list.
+            Format the comment clearly. Start it with a note that it was
+            generated by an AI analysis of the codebase. If posting questions,
+            use a heading and a numbered list.
 
-            Do NOT make any file changes in the target repository or push any commits. This workflow only reads the codebase and posts a single comment on the issue.
+            Do NOT make any file changes in the target repository or push any
+            commits. This workflow only reads the codebase and posts a single
+            comment on the issue.
