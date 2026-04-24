@@ -7,13 +7,6 @@ on:
         description: The issue number to analyze.
         required: true
         type: string
-    secrets:
-      github_token:
-        description: |
-          A GitHub token with `contents:read` and `issues:write` on the target
-          repository. Falls back to the job's `GITHUB_TOKEN`, which only works
-          when the target repository is the caller repository.
-        required: false
 
 jobs:
   analyze-issue:
@@ -25,13 +18,11 @@ jobs:
     steps:
       - name: Checkout target repository
         uses: actions/checkout@v6
-        with:
-          token: ${{ secrets.github_token || github.token }}
 
       - name: Analyze issue with Claude Code
         uses: anthropics/claude-code-action@e58dfa55559035499a4982426bb73605e8b5ad8e # v1.0.105
         env:
-          GH_TOKEN: ${{ secrets.github_token || github.token }}
+          GH_TOKEN: ${{ github.token }}
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           allowed_tools: Bash,Read,Grep,Glob
