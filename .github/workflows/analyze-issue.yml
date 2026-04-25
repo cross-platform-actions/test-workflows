@@ -7,10 +7,10 @@ on:
         description: The issue number to analyze.
         required: true
         type: string
-    secrets:
-      anthropic_api_key:
-        description: Anthropic API key used to authenticate with the Claude API.
-        required: true
+    # secrets:
+    #   anthropic_api_key:
+    #     description: Anthropic API key used to authenticate with the Claude API.
+    #     required: true
 
 jobs:
   analyze-issue:
@@ -29,7 +29,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         with:
-          anthropic_api_key: ${{ secrets.anthropic_api_key }}
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           github_token: ${{ github.token }}
           claude_args: --allowedTools "Bash,Read,Grep,Glob"
           prompt: |
