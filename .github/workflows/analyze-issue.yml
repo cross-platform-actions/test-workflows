@@ -7,6 +7,10 @@ on:
         description: The issue number to analyze.
         required: true
         type: string
+    secrets:
+      anthropic_api_key:
+        description: Anthropic API key used to authenticate with the Claude API.
+        required: true
 
 jobs:
   analyze-issue:
@@ -20,22 +24,12 @@ jobs:
       - name: Checkout target repository
         uses: actions/checkout@v6
 
-      - name: Debug — is ANTHROPIC_API_KEY present?
-        env:
-          KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: |
-          if [ -z "$KEY" ]; then
-            echo "ANTHROPIC_API_KEY is EMPTY in called-workflow context"
-          else
-            echo "ANTHROPIC_API_KEY is set (length=${#KEY})"
-          fi
-
       - name: Analyze issue with Claude Code
         uses: anthropics/claude-code-action@e58dfa55559035499a4982426bb73605e8b5ad8e # v1.0.105
         env:
           GH_TOKEN: ${{ github.token }}
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          anthropic_api_key: ${{ secrets.anthropic_api_key }}
           github_token: ${{ github.token }}
           claude_args: --allowedTools "Bash,Read,Grep,Glob"
           prompt: |
